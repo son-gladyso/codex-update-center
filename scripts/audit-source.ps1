@@ -18,6 +18,13 @@ while ($pending.Count -gt 0) {
 $allowed = @('.cs','.csproj','.xaml','.manifest','.json','.ps1','.md','.yml','.yaml')
 foreach ($file in $files) {
     if ($file.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Linked source file.' }
+    $relative = [IO.Path]::GetRelativePath($root, $file.FullName).Replace('\','/')
+    if ($file.Extension -eq '.png' -and $relative.StartsWith('docs/images/', [StringComparison]::Ordinal)) {
+        if ($file.Length -gt 2MB -or $file.Length -lt 8) { throw 'Documentation image size is invalid.' }
+        $bytes = [IO.File]::ReadAllBytes($file.FullName)
+        if ([Convert]::ToHexString($bytes[0..7]) -ne '89504E470D0A1A0A') { throw 'Documentation image is not PNG.' }
+        continue # Images are manually reviewed for personal content before staging.
+    }
     if ($file.Name -notin $top -and $file.Extension -notin $allowed) { throw "Unexpected source file: $($file.Name)" }
     $content = Get-Content -LiteralPath $file.FullName -Raw
     if ($content -match '(?i)(BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|sk-[A-Za-z0-9_-]{32,}|gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|[A-Z]:[\\/]+Users[\\/]+[^\\/\s]+[\\/]|[A-Z]:[\\/]+codex\d+[\\/])') { throw "Private source content: $($file.Name)" }

@@ -5,6 +5,12 @@ $allowedRoot = @('.exe','.dll','.json','.md','.txt','.config')
 foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -Force) {
     if ($file.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Linked release entry: $($file.Name)" }
     $relative = [IO.Path]::GetRelativePath($root,$file.FullName)
+    if (-not $file.PSIsContainer -and $file.Extension -eq '.png' -and $relative.Replace('\','/').StartsWith('docs/images/', [StringComparison]::Ordinal)) {
+        if ($file.Length -gt 2MB -or $file.Length -lt 8) { throw 'Invalid documentation image size.' }
+        $bytes = [IO.File]::ReadAllBytes($file.FullName)
+        if ([Convert]::ToHexString($bytes[0..7]) -ne '89504E470D0A1A0A') { throw 'Invalid documentation image.' }
+        continue # Still included in manifest/hash verification below.
+    }
     if ($relative -match '(?i)(^|[\\/])(data|cache|logs|snapshots|node_modules|\.git|\.codex|artifacts)([\\/]|$)' -or $file.Name -match '(?i)(auth\.json|\.pfx$|\.p12$|\.pem$|\.key$|\.sqlite|\.pdb$|^\.env$)') { throw "Private or development artifact: $relative" }
     if (-not $file.PSIsContainer -and $file.Extension -notin $allowedRoot -and $file.Name -ne 'LICENSE') { throw "Unexpected release file: $relative" }
     if (-not $file.PSIsContainer -and $file.Extension -in @('.md','.json','.txt','.config')) {
