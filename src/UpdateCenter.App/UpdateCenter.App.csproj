@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>WinExe</OutputType><UseWPF>true</UseWPF><AssemblyName>CodexUpdateCenter</AssemblyName><ApplicationManifest>app.manifest</ApplicationManifest></PropertyGroup><ItemGroup><ProjectReference Include="../UpdateCenter.Core/UpdateCenter.Core.csproj" /></ItemGroup></Project>

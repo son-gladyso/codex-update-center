@@ -1,0 +1,5 @@
+<Solution>
+ <Project Path="src/UpdateCenter.Core/UpdateCenter.Core.csproj" />
+ <Project Path="src/UpdateCenter.App/UpdateCenter.App.csproj" />
+ <Project Path="tests/UpdateCenter.Tests/UpdateCenter.Tests.csproj" />
+</Solution>
