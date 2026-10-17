@@ -15,7 +15,7 @@ public partial class MainWindow : Window
 {
     private readonly UpdateState state;
     private readonly CommandRunner runner = new();
-    private readonly OfficialNetwork network = new();
+    private readonly OfficialNetwork network;
     private readonly bool preview;
     private readonly FileStream windowLease;
     private readonly Func<string> readNetworkCost;
@@ -27,26 +27,32 @@ public partial class MainWindow : Window
     private Installation? Selected => InstallList.SelectedItem as Installation;
     private WindowsDiscovery Discovery => new(runner, preferences.ExtraPrefixes);
     private UpdateService Service => new(state, Discovery, new WindowsPlatform(runner, state.Root), new PackageVerifier(network, App.VerifySignatureAsync));
-    public MainWindow(string root, bool preview = false, Func<string>? readNetworkCost = null)
+    public MainWindow(string root, bool preview = false, Func<string>? readNetworkCost = null, OfficialNetwork? network = null)
     {
         state = new(root); this.preview = preview;
         this.readNetworkCost = readNetworkCost ?? NetworkCost.Read;
+        this.network = network ?? new OfficialNetwork();
         windowLease = new FileStream(Path.Combine(state.Root, "window.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
         preferences = Data.Read<Preferences>(Path.Combine(root, "preferences.json")) ?? new();
         InitializeComponent(); AutoBox.IsChecked = preferences.Automatic; initialized = true;
         VersionText.Text = "COMMUNITY EDITION  ·  Windows x64  ·  " + Data.ProductVersion;
         Loaded += async (_, _) => { if (!preview) await RunAsync(InitializeAsync); };
-        Closing += OnClosing; Closed += (_, _) => { network.Dispose(); windowLease.Dispose(); };
+        Closing += OnClosing; Closed += (_, _) => { this.network.Dispose(); windowLease.Dispose(); };
     }
     private async Task InitializeAsync(CancellationToken ct)
     {
         await ScanAsync(ct);
+        await ResumeAutomaticAsync(ct);
+    }
+    private async Task ResumeAutomaticAsync(CancellationToken ct)
+    {
         var journal = state.Read();
         if (journal != null)
         {
             StatusText.Text = journal.Message;
             if (journal.Phase is "Installing" or "NeedsReview") { WarningText.Text += "\n上次安装结果尚未确认，请先重新扫描。程序不会自动继续安装。"; return; }
             if (journal.Phase == "Paused") { StatusText.Text = "上次已暂停；点击“检查并准备更新”继续。"; return; }
+            if (journal.Phase == "PreparationFailed") { StatusText.Text = journal.Message; return; }
         }
         if (preferences.Automatic && Selected?.Supported == true) await PrepareAsync(ct);
     }
@@ -64,10 +70,25 @@ public partial class MainWindow : Window
     }
     private async Task PrepareAsync(CancellationToken ct)
     {
+        try { await PrepareCoreAsync(ct); }
+        catch (Exception error) when (error is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            prepared = null;
+            // Persist the stop even for a transport failure: reopening must not
+            // silently retry a failed candidate. Explicit preparation starts fresh.
+            var message = "准备失败，已停止自动重试。点击“检查并准备更新”重新查询；旧文件保留。\n" + error.Message;
+            try { using var lease = state.Lock(); state.Save("PreparationFailed", null, message); }
+            catch (Exception saveError) { throw new IOException(message + "\n无法保存停止状态：" + saveError.Message, error); }
+            throw new IOException(message, error);
+        }
+    }
+    private async Task PrepareCoreAsync(CancellationToken ct)
+    {
         var target = Selected ?? throw new InvalidOperationException("请先选择安装。");
         if (!target.Supported) throw new InvalidOperationException(target.Detail);
         using var lease = state.Lock(); prepared = null;
         var oldJournal = state.Read();
+        if (oldJournal?.Phase == "PreparationFailed") RetainPreparation();
         var resume = Data.Read<Preparation>(Path.Combine(state.Root, "preparation.json"));
         if (resume?.Target != target || resume.At == default || DateTimeOffset.UtcNow - resume.At >= TimeSpan.FromHours(6)) resume = null;
         var already = oldJournal?.Prepared;
@@ -105,6 +126,11 @@ public partial class MainWindow : Window
         StatusText.Text = "下载完成，正在验证签名和包内容…";
         await PrepareNativeAsync(offer, package, ct);
         prepared = await Service.VerifyPreparedAsync(target, offer, package, ct); ShowPrepared();
+    }
+    private void RetainPreparation()
+    {
+        var path = Path.Combine(state.Root, "preparation.json");
+        if (File.Exists(path)) { Data.NoLinks(path); File.Move(path, path + ".retained-" + Guid.NewGuid().ToString("N")); }
     }
     private async Task PrepareNativeAsync(ReleaseOffer offer, string package, CancellationToken ct)
     {
@@ -184,8 +210,7 @@ public partial class MainWindow : Window
         {
             using (state.Lock())
             {
-                var path = Path.Combine(state.Root, "preparation.json");
-                if (File.Exists(path)) { Data.NoLinks(path); File.Move(path, path + ".retained-" + Guid.NewGuid().ToString("N")); }
+                RetainPreparation();
                 prepared = null; state.Save("Idle", null, "保留旧文件，重新查询官方更新。");
             }
             await PrepareAsync(ct);

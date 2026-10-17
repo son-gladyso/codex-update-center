@@ -17,7 +17,7 @@ public sealed class UiRegressionTests
     private static Task Run(MainWindow window, Func<CancellationToken, Task> action) => (Task)Invoke(window, "RunAsync", action)!;
 
     // Each test owns a real STA dispatcher and an isolated data directory.
-    private static Task OnWindow(Func<MainWindow, Fixture, Task> test, string cost = "Unrestricted")
+    private static Task OnWindow(Func<MainWindow, Fixture, Task> test, string cost = "Unrestricted", Func<HttpRequestMessage, HttpResponseMessage>? reply = null)
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
@@ -29,7 +29,7 @@ public sealed class UiRegressionTests
                 try
                 {
                     using var fixture = new Fixture();
-                    var window = new MainWindow(fixture.Root, true, () => cost);
+                    var window = new MainWindow(fixture.Root, true, () => cost, reply == null ? null : new OfficialNetwork(new Handler(reply)));
                     try { await test(window, fixture); }
                     finally { window.Close(); }
                     completion.SetResult();
@@ -44,6 +44,64 @@ public sealed class UiRegressionTests
         thread.Start();
         return completion.Task.WaitAsync(TimeSpan.FromSeconds(30));
     }
+
+    [Fact]
+    public Task PreparationFailureSurvivesReopenAndExplicitRetryQueriesFreshOffer()
+    {
+        var queries = 0;
+        HttpResponseMessage Reply(HttpRequestMessage request)
+        {
+            Assert.Equal(HttpMethod.Head, request.Method);
+            queries++;
+            return new(System.Net.HttpStatusCode.OK) { Content = new ByteArrayContent(queries == 1 ? [] : new byte[] { 1, 2, 3 }) };
+        }
+        return OnWindow(async (window, fixture) =>
+        {
+            var target = new Installation("test", InstallKind.DesktopMsix, "Desktop", "1.0.0.0", fixture.Root, "test", "test");
+            void Select(MainWindow value)
+            {
+                Control<ListBox>(value, "InstallList").ItemsSource = new[] { target };
+                Control<ListBox>(value, "InstallList").SelectedIndex = 0;
+            }
+            Select(window);
+            await Run(window, ct => (Task)Invoke(window, "PrepareAsync", ct)!);
+            Assert.Equal("PreparationFailed", new UpdateState(fixture.Root).Read()!.Phase);
+            Assert.Equal(1, queries);
+            var oldPackage = fixture.File("old/package", [7, 8]);
+            var prepPath = Path.Combine(fixture.Root, "preparation.json");
+            Data.Write(prepPath, new Preparation(target, new(InstallKind.DesktopMsix, "9.0.0.0", OfficialNetwork.DesktopUrl, 3), oldPackage, "old-volume", DateTimeOffset.UtcNow));
+            window.Close();
+            var reopened = new MainWindow(fixture.Root, true, () => "Metered", new OfficialNetwork(new Handler(Reply)));
+            try
+            {
+                Select(reopened);
+                await Run(reopened, ct => (Task)Invoke(reopened, "ResumeAutomaticAsync", ct)!);
+                Assert.Equal(1, queries);
+                Assert.Equal("PreparationFailed", new UpdateState(fixture.Root).Read()!.Phase);
+                await Run(reopened, ct => (Task)Invoke(reopened, "PrepareAsync", ct)!);
+                Assert.Equal(2, queries);
+                Assert.False(File.Exists(prepPath));
+                Assert.Single(Directory.GetFiles(fixture.Root, "preparation.json.retained-*"));
+                Assert.Equal(new byte[] { 7, 8 }, File.ReadAllBytes(oldPackage));
+            }
+            finally { reopened.Close(); }
+        }, "Metered", Reply);
+    }
+
+    [Fact]
+    public Task BusyOperationCannotHaveItsJournalOverwrittenByPreparationFailure() => OnWindow(async (window, fixture) =>
+    {
+        var target = new Installation("test", InstallKind.Npm, "CLI", "1.0.0", fixture.Root, "@openai/codex", "test");
+        Control<ListBox>(window, "InstallList").ItemsSource = new[] { target };
+        Control<ListBox>(window, "InstallList").SelectedIndex = 0;
+        var state = new UpdateState(fixture.Root);
+        state.Save("Installing", null, "Another operation owns this journal.");
+        var original = File.ReadAllBytes(Path.Combine(fixture.Root, "job.json"));
+        using var lease = state.Lock();
+        await Run(window, ct => (Task)Invoke(window, "PrepareAsync", ct)!);
+        Assert.Equal(original, File.ReadAllBytes(Path.Combine(fixture.Root, "job.json")));
+        Assert.Contains("无法保存停止状态", Control<TextBlock>(window, "StatusText").Text);
+    });
 
     [Fact]
     public Task PreferenceWriteFailureRestoresCheckboxWithoutCrashing() => OnWindow((window, fixture) =>
