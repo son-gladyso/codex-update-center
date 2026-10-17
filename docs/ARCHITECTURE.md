@@ -11,6 +11,8 @@
 
 The per-user `window.lock` prevents competing windows. `operation.lock` protects mutation. `job.json` records phases; `preparation.json` records resumable download identity. Preferences are committed to memory only after persistence succeeds. UI errors are caught at event/operation boundaries; installation cancellation never claims a paused download.
 
+Preparation errors persist as `PreparationFailed`; opening a window never retries that phase automatically. An explicit retry retains the old preparation record and queries a new offer. User cancellation preserves resumability. Download checkpoint lengths can be null until the server supplies a validated total or a clean EOF is reached. Estimates reserve disk space and never replace exact transfer checks; unknown-size packages still require full signature verification before installation.
+
 ## Working on this project
 
 - Keep native process invocation in platform adapters. Pass arguments as arrays, retain TLS validation and never interpolate untrusted values into shell source.

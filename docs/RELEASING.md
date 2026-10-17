@@ -10,9 +10,9 @@ pwsh -File scripts/build.ps1 -Output artifacts/release-local
 
 使用 `pwsh -File scripts/package-source.ps1` 生成可单独上传到 GitHub 的源码 ZIP。`scripts/verify-release.ps1 -Directory <解压目录>` 会校验内容边界及 manifest.json 的逐文件哈希。审核记录见 [REVIEW.md](REVIEW.md)。
 
-公开仓库以此目录作为根目录；不要上传其父工作区。main 和 PR 会构建并上传 Actions 工件。推送版本标签时只生成 draft prerelease，维护者审核 ZIP、清单、说明和测试记录后再公开。首次运行 GitHub 工作流本身仍需在目标仓库验证。
+公开仓库以此目录作为根目录；不要上传其父工作区。main 和 PR 会构建并上传 Actions 工件。推送版本标签时只生成 draft prerelease，维护者审核 ZIP、清单、说明和测试记录后再公开。每个发行必须等待对应提交和标签的 GitHub 工作流成功；旧版本的成功不能替代新版本验证。
 
-当前为 0.1.1-preview 预览版。未完成 Windows 部署虚拟机矩阵前不要宣称稳定版。工具本体当前没有商业 Authenticode 签名；系统可能显示未知发布者。不要把本机私人证书或私钥放入公开仓库，不要指导用户关闭系统安全功能。下载包的 SHA-256 用于完整性核对，不能替代可信发布渠道。
+当前为 0.1.2-preview 预览版。未完成 Windows 部署虚拟机矩阵前不要宣称稳定版。工具本体当前没有商业 Authenticode 签名；系统可能显示未知发布者。不要把本机私人证书或私钥放入公开仓库，不要指导用户关闭系统安全功能。下载包的 SHA-256 用于完整性核对，不能替代可信发布渠道。
 
 维护者获得代码签名证书后，可在隔离 CI 环境中添加签名步骤；签名必须先于清单和 ZIP 生成。本工具验证官方 Codex 包的流程独立于自身发行签名。
 

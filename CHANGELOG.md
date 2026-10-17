@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2-preview
+
+- Accept desktop HEAD responses without a length, reserve the full transfer budget, and keep estimates separate from exact size checks.
+- Download bodies without length headers through clean EOF; retain validated resume checkpoints and enforce the 4 GiB limit, known lengths, ETags and package signatures.
+- Persist preparation failures across window closure. Explicit retry keeps old files and queries a fresh candidate instead of repeatedly reusing the failed offer.
+- Add regression coverage for unknown lengths, cancellation/resume, exact-size and identity rejection, and failure/reopen/retry on a real WPF dispatcher.
+
 ## 0.1.1-preview
 
 - Recheck network cost before npm installation as well as preparation, including reuse of verified candidates; a blocked attempt keeps the prepared state and never enters installation.

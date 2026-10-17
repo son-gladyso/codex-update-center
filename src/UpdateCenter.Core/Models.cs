@@ -13,7 +13,7 @@ public sealed record Installation(string Id, InstallKind Kind, string Name, stri
     public bool Supported => Kind != InstallKind.Unsupported;
 }
 public sealed record DiscoveryResult(Installation[] Installations, string[] Warnings);
-public sealed record ReleaseOffer(InstallKind Kind, string Version, string Url, long Size, string? Integrity = null, string? Metadata = null, string? ETag = null);
+public sealed record ReleaseOffer(InstallKind Kind, string Version, string Url, long Size, string? Integrity = null, string? Metadata = null, string? ETag = null, bool SizeIsEstimate = false);
 public sealed record PreparedUpdate(Installation Target, ReleaseOffer Offer, string Package, string Sha256, DateTimeOffset At);
 public sealed record Journal(int Schema, string Phase, PreparedUpdate? Prepared, string Message, DateTimeOffset At);
 public sealed record Command(string Executable, string[] Arguments, string? Input = null, IReadOnlyDictionary<string,string>? Environment = null);

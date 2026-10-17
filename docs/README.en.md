@@ -45,7 +45,7 @@ State: `%LOCALAPPDATA%\CodexUpdateCenter\Public`. Cache locations are shown in t
 
 ## Maintainable by design
 
-71 program tests, 10 release-tool checks, isolated native acceptance, locked dependencies, source privacy audits, per-file release manifests and Windows CI. Evidence scopes are separate: see [validation](VALIDATION.md), [support](SUPPORT.md) and [GitHub Actions](https://github.com/son-gladyso/codex-update-center/actions).
+81 program tests, 10 release-tool checks, isolated native acceptance, locked dependencies, source privacy audits, per-file release manifests and Windows CI. Evidence scopes are separate: see [validation](VALIDATION.md), [support](SUPPORT.md) and [GitHub Actions](https://github.com/son-gladyso/codex-update-center/actions).
 
 Build on Windows x64 with PowerShell 7 and the SDK in `global.json`:
 

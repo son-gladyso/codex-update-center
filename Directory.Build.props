@@ -2,7 +2,7 @@
   <TargetFramework>net10.0-windows</TargetFramework><EnableWindowsTargeting>true</EnableWindowsTargeting>
   <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><LangVersion>14</LangVersion>
   <TreatWarningsAsErrors>true</TreatWarningsAsErrors><Deterministic>true</Deterministic>
-  <Version>0.1.1-preview</Version><Authors>Codex Update Center contributors</Authors>
+  <Version>0.1.2-preview</Version><Authors>Codex Update Center contributors</Authors>
   <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile><RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   <DebugType>embedded</DebugType>
 </PropertyGroup></Project>
