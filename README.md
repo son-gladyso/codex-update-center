@@ -1,5 +1,7 @@
 # Codex Update Center
 
+[简体中文](README.md) · [English](docs/README.en.md) · [日本語](docs/i18n/README.ja.md) · [한국어](docs/i18n/README.ko.md) · [Español](docs/i18n/README.es.md) · [Français](docs/i18n/README.fr.md) · [Deutsch](docs/i18n/README.de.md) · [Português (Brasil)](docs/i18n/README.pt-BR.md)
+
 ### 更新 Codex，少一点折腾。
 
 **一个窗口，找到安装、准备官方更新、确认安装结果。** 为 Windows 上不想反复查安装目录、重下大包和排查“更新了却不能用”的用户而做。
@@ -25,7 +27,7 @@ Windows x64 · 解压运行，自带 .NET · MIT 开源 · 独立社区项目，
 | “手机热点不想被后台下载吃光。” | 计费或费用未知网络默认阻止大包下载，npm 安装前再次检查；可以明确放行本次下载。 |
 | “C 盘快满了，缓存会放哪里？” | 先检查预算和安全余量；C 盘足够时优先使用，不足时考虑符合条件的内部固定盘，并显示缓存位置。 |
 
-**安装包来自官方来源，安装前验证签名和内容。** 工具不需要 API key，不读取账号令牌或聊天数据库，也不上传遥测。
+**安装包来自官方来源，安装前验证签名和内容。** 工具不需要 API key，不读取账号令牌或聊天数据库，也不上传遥测，不替换你的启动器配置。
 
 ## 开始使用
 
@@ -36,7 +38,7 @@ Windows x64 · 解压运行，自带 .NET · MIT 开源 · 独立社区项目，
 
 找不到自定义 npm 目录时，使用 **添加 npm 安装目录**。首次还没装 Codex 时，窗口提供官方安装说明。
 
-> 当前是 **社区预览版**，适合愿意反馈问题的 Windows 用户。工具本体尚无商业 Authenticode 签名；不要关闭系统安全功能来运行。Windows 部署兼容性矩阵尚未完成，具体范围见[验证记录](docs/VALIDATION.md)。
+> 当前是 **社区预览版**，适合愿意反馈问题的 Windows 用户。工具本体尚无商业 Authenticode 签名；不要关闭系统安全功能来运行。Windows 部署兼容性矩阵、实体设备无障碍测试及部分代理/网络场景尚未验证，具体范围见[验证记录](docs/VALIDATION.md)。
 
 ## 哪些安装可以更新？
 

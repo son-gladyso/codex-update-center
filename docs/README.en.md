@@ -1,5 +1,7 @@
 # Codex Update Center
 
+[简体中文](../README.md) · [English](README.en.md) · [日本語](i18n/README.ja.md) · [한국어](i18n/README.ko.md) · [Español](i18n/README.es.md) · [Français](i18n/README.fr.md) · [Deutsch](i18n/README.de.md) · [Português (Brasil)](i18n/README.pt-BR.md)
+
 ### Less friction when updating Codex on Windows.
 
 **Find your installation, prepare a verified official update, and confirm what actually installed — in one window.**
@@ -32,6 +34,25 @@ No API key required. The updater does not read account tokens or chat databases,
 4. Save your work, exit that Codex installation normally, then confirm installation. Review the verified resulting version.
 
 Custom npm prefixes can be added. Portable copies, custom multi-instance launchers, WSL, ARM64 and linked Node version-manager layouts are not automatically updated.
+
+## Installation coverage and operational details
+
+| Installation | Support |
+| --- | --- |
+| Current-user, official Store-signed `OpenAI.Codex` x64 desktop installation | Discover and verify official MSIX, then update through Windows deployment services. Actual Windows deployment still awaits full acceptance. |
+| Stable `@openai/codex` global installation under standard Node.js/npm | Discover, verify the main package and Windows native components, and update after confirmation; tested with a real upgrade in an isolated directory. |
+| Multiple npm global directories or desktop and CLI side by side | Show them separately and update one at a time; npm prefixes can be added manually. |
+| Portable copies, custom multi-instance launchers, WSL, ARM64, linked Node version-manager layouts | No automatic takeover; use the original installation tool. |
+
+The desktop app and CLI are maintained separately; the updater does not insert a standalone CLI into the desktop app. Moving the download cache to another disk does not change the desktop installation location managed by Windows. If Codex is not installed yet, the window provides official installation instructions.
+
+Network cost is rechecked before npm installation. When C has insufficient reserves, eligible internal fixed disks are considered and the cache location is displayed. Download checkpoints survive a pause or window closure; an explicit user pause is not automatically resumed.
+
+A failed, interrupted, or unconfirmed installation asks you to inspect again; an installer merely returning is not success. The tool does not downgrade to an older candidate, migrate accounts or chats, or start a persistent background service. npm index requests can still fail with some proxies; cache and failure records are retained. Inspect state and cache files before cleanup.
+
+The 81 program tests cover changed targets, invalid signatures, resume, concurrent locks, pause, and installation network-cost gates. The 10 release-tool checks cover package tampering, omitted hidden files, out-of-bounds paths, and source privacy boundaries. The isolated CLI upgrade left existing installation manifests unchanged. Independent builds from the source package and extraction/launch of the runtime package have also been verified.
+
+Release gates audit source, restore locked dependencies, run tests, generate self-contained packages, and check manifests. The output directory must be new; ordinary tests do not install or modify Codex. Include your Windows version in feedback and use the [issue or suggestion templates](https://github.com/son-gladyso/codex-update-center/issues/new/choose). See also the [changelog](../CHANGELOG.md). Release archives do not contain Codex software.
 
 ## Honest preview boundaries
 
