@@ -1,0 +1,29 @@
+name: CodeQL CSharp Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 5 * * 1'
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+  csharp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Initialize CodeQL without building
+        uses: github/codeql-action/init@v4
+        with:
+          languages: csharp
+          build-mode: none
+      - name: Analyze CSharp source
+        uses: github/codeql-action/analyze@v4
