@@ -1,6 +1,6 @@
 # Codex Update Center
 
-[简体中文](../README.md) · [English](README.en.md) · [日本語](i18n/README.ja.md) · [한국어](i18n/README.ko.md) · [Español](i18n/README.es.md) · [Français](i18n/README.fr.md) · [Deutsch](i18n/README.de.md) · [Português (Brasil)](i18n/README.pt-BR.md)
+[简体中文](../README.md) · [English](README.en.md) · [日本語](i18n/README.ja.md) · [한국어](i18n/README.ko.md) · [Español](i18n/README.es.md) · [Français](i18n/README.fr.md) · [Deutsch](i18n/README.de.md) · [Português (Brasil)](i18n/README.pt-BR.md) · [Русский](i18n/README.ru.md) · [繁體中文](i18n/README.zh-TW.md)
 
 ### Less friction when updating Codex on Windows.
 
